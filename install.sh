@@ -85,8 +85,13 @@ fi
 
 # ╔════════════════════════════════════════════════════════════════╗
 print_section "📦 MEMPERBARUI SISTEM & INSTAL GOLANG"
-run_with_spinner "🔄 Memperbarui paket sistem" "sudo apt-get update && sudo apt-get upgrade -y"
-run_with_spinner "🐹 Menginstal Golang" "sudo apt-get install -y golang git"
+run_with_spinner "🔄 Memperbarui paket sistem" "sudo apt-get update"
+
+if ! command -v go &> /dev/null; then
+    run_with_spinner "🐹 Menginstal Golang" "sudo apt-get install -y golang git"
+else
+    echo -e "${GREEN}✅ Golang sudah terinstal.${RESET}"
+fi
 
 # ╔════════════════════════════════════════════════════════════════╗
 print_section "🌐 KONFIGURASI DOMAIN"
