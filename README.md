@@ -1,9 +1,10 @@
 # ZiVPN UDP Tunnel
 
-Repository ini berisi installer dan API untuk menjalankan ZiVPN UDP Tunnel.
+Repository ini berisi installer dan API untuk menjalankan ZiVPN UDP Tunnel dengan tampilan CLI yang **Minimalist & Elegant**.
 
 ## Fitur
 
+*   **Minimalist CLI**: Tampilan installer yang bersih, modern, dan silent (tidak spam log).
 *   **Tanpa UI**: Manajemen user dilakukan sepenuhnya via API (headless).
 *   **API Golang**: Termasuk API server untuk Create, Delete, Renew, dan List User.
 *   **Auto Install**: Script installer otomatis menginstall Golang, setup API, dan service systemd.
@@ -34,6 +35,18 @@ Setelah instalasi selesai, API akan berjalan di port `8080`.
     {
         "password": "user123",
         "days": 30
+    }
+    ```
+*   **Response**:
+    ```json
+    {
+        "success": true,
+        "message": "User berhasil dibuat",
+        "data": {
+            "password": "user123",
+            "expired": "2024-12-31",
+            "domain": "vpn.domain.com"
+        }
     }
     ```
 
