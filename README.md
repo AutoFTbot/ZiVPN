@@ -1,50 +1,33 @@
-# ZiVPN Tunnel UDP
+# ZiVPN UDP Tunnel
 
-Repository ini berisi script installer untuk ZiVPN UDP Tunnel yang telah dimodifikasi oleh **AutoFTbot**.
+Repository ini berisi installer dan API untuk menjalankan ZiVPN UDP Tunnel.
 
 ## Fitur
-- **Bahasa Indonesia**: Seluruh script menggunakan Bahasa Indonesia.
-- **Tanpa UI**: Instalasi ringan tanpa panel menu berbasis shell. Manajemen user dilakukan langsung melalui API binary Golang.
-- **API Golang**: Tersedia source code API (`zivpn-api.go`) untuk manajemen user secara programatik.
-- **Otomatisasi**: Script instalasi otomatis mengatur service systemd, iptables, dan sertifikat SSL.
+
+*   **Tanpa UI**: Manajemen user dilakukan sepenuhnya via API (headless).
+*   **API Golang**: Termasuk API server untuk Create, Delete, Renew, dan List User.
+*   **Auto Install**: Script installer otomatis menginstall Golang, setup API, dan service systemd.
+*   **Support**: Linux AMD64 (x86_64) Only.
 
 ## Instalasi
 
-### Untuk VPS AMD64 (Umum)
+Jalankan perintah berikut di terminal VPS Anda (sebagai root):
+
 ```bash
-wget https://raw.githubusercontent.com/AutoFTbot/ZiVPN/main/install-amd.sh && chmod +x install-amd.sh && ./install-amd.sh
+wget -q https://raw.githubusercontent.com/AutoFTbot/ZiVPN/main/install.sh && chmod +x install.sh && ./install.sh
 ```
 
-### Untuk VPS ARM64
-```bash
-wget https://raw.githubusercontent.com/AutoFTbot/ZiVPN/main/install-arm.sh && chmod +x install-arm.sh && ./install-arm.sh
-```
+Saat instalasi, Anda akan diminta memasukkan **Domain**. Domain ini digunakan untuk generate sertifikat SSL.
 
-## Penggunaan API (Golang)
+## API Documentation
 
-Anda dapat menjalankan API service untuk mengelola pengguna secara remote atau lokal.
+Setelah instalasi selesai, API akan berjalan di port `8080`.
 
-### 1. Build API
-Pastikan Go sudah terinstal di VPS Anda.
-```bash
-cd /root/zivpn-tunnel-udp # Sesuaikan dengan lokasi direktori
-go build -o zivpn-api zivpn-api.go
-```
+**Base URL**: `http://<IP-VPS>:8080`
+**Auth Header**: `X-API-Key: zivpn-secret-token` (Default)
 
-### 2. Jalankan API
-```bash
-./zivpn-api
-# Output: ZiVPN API berjalan di port :8080
-```
-*Disarankan untuk menjalankan ini sebagai service systemd agar berjalan di background.*
-
-### 3. Dokumentasi Endpoint
-
-**Header Wajib:**
-`X-API-Key: zivpn-secret-token` (Ganti token di source code jika perlu)
-
-#### A. Buat User Baru
-*   **URL**: `/api/user/create`
+### 1. Create User
+*   **Endpoint**: `/api/user/create`
 *   **Method**: `POST`
 *   **Body**:
     ```json
@@ -54,8 +37,8 @@ go build -o zivpn-api zivpn-api.go
     }
     ```
 
-#### B. Hapus User
-*   **URL**: `/api/user/delete`
+### 2. Delete User
+*   **Endpoint**: `/api/user/delete`
 *   **Method**: `POST`
 *   **Body**:
     ```json
@@ -64,8 +47,8 @@ go build -o zivpn-api zivpn-api.go
     }
     ```
 
-#### C. Perpanjang User
-*   **URL**: `/api/user/renew`
+### 3. Renew User
+*   **Endpoint**: `/api/user/renew`
 *   **Method**: `POST`
 *   **Body**:
     ```json
@@ -75,16 +58,18 @@ go build -o zivpn-api zivpn-api.go
     }
     ```
 
-#### D. List Semua User
-*   **URL**: `/api/users`
+### 4. List Users
+*   **Endpoint**: `/api/users`
 *   **Method**: `GET`
 
-#### E. Info System
-*   **URL**: `/api/info`
+### 5. System Info
+*   **Endpoint**: `/api/info`
 *   **Method**: `GET`
 
 ## Uninstall
-Untuk menghapus instalasi:
+
+Untuk menghapus ZiVPN dan API-nya:
+
 ```bash
-wget https://raw.githubusercontent.com/AutoFTbot/ZiVPN/main/uninstall.sh && chmod +x uninstall.sh && ./uninstall.sh
+wget -q https://raw.githubusercontent.com/AutoFTbot/ZiVPN/main/uninstall.sh && chmod +x uninstall.sh && ./uninstall.sh
 ```

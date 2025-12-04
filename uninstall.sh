@@ -54,16 +54,6 @@ print_section "🗑️ MENGHAPUS INDIKATOR DAN PERBAIKAN"
 rm -f /etc/zivpn-iptables-fix-applied
 
 # ╔════════════════════════════════════════════════════════════════════╗
-print_section "🧨 MENGHAPUS PANEL ADMINISTRASI"
-rm -f /usr/local/bin/menu-zivpn
-rm -f /etc/zivpn/usuarios.db
-rm -f /etc/zivpn/autoclean.conf
-rm -f /etc/systemd/system/zivpn-autoclean.timer
-rm -f /etc/systemd/system/zivpn-autoclean.service
-systemctl daemon-reexec &>/dev/null
-systemctl daemon-reload &>/dev/null
-
-# ╔════════════════════════════════════════════════════════════════════╗
 print_section "📋 MEMERIKSA STATUS AKHIR"
 if pgrep "zivpn" &>/dev/null; then
   echo -e "${RED}⚠️  Proses ZIVPN masih aktif.${RESET}"
@@ -81,12 +71,6 @@ if [ -e "/usr/local/bin/zivpn" ]; then
   echo -e "${YELLOW}⚠️  Binary masih ada. Coba lagi.${RESET}"
 else
   echo -e "${GREEN}✅ Binary berhasil dihapus.${RESET}"
-fi
-
-if [ -f /usr/local/bin/menu-zivpn ]; then
-  echo -e "${RED}⚠️  Panel tidak terhapus.${RESET}"
-else
-  echo -e "${GREEN}✅ Panel berhasil dihapus.${RESET}"
 fi
 
 # ╔════════════════════════════════════════════════════════════════════╗

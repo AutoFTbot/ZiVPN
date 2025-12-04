@@ -23,6 +23,25 @@ print_section() {
   echo -e "${MAGENTA}╚════════════════════════════════════════════════════════════════╝${RESET}"
 }
 
+# ╔════════════════════════════════════════════════════════════════╗
+print_section "🔍 MEMERIKSA KOMPATIBILITAS SISTEM"
+
+# Cek OS Linux
+if [[ "$(uname -s)" != "Linux" ]]; then
+  echo -e "${RED}❌ Error: Script ini hanya berjalan di Linux.${RESET}"
+  exit 1
+fi
+
+# Cek Arsitektur AMD64
+ARCH=$(uname -m)
+if [[ "$ARCH" != "x86_64" ]]; then
+  echo -e "${RED}❌ Error: Arsitektur '$ARCH' tidak didukung.${RESET}"
+  echo -e "${YELLOW}⚠️  Installer ini khusus untuk AMD64 (x86_64).${RESET}"
+  exit 1
+fi
+
+echo -e "${GREEN}✅ Sistem kompatibel: Linux AMD64${RESET}"
+
 # Fungsi untuk menampilkan spinner dan menangani error
 run_with_spinner() {
   local msg="$1"
