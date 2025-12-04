@@ -13,16 +13,16 @@ import (
 	"time"
 )
 
-// Konfigurasi path file
 const (
 	ConfigFile = "/etc/zivpn/config.json"
 	UserDB     = "/etc/zivpn/users.db"
 	DomainFile = "/etc/zivpn/domain"
-	AuthToken  = "ASdfaASFaSrofasufasf34qwdas4q2rq++ASdasfawerwDF#Q" // Ganti dengan token yang aman
+	ApiKeyFile = "/etc/zivpn/apikey"
 	Port       = ":8080"
 )
 
-// Struktur Config.json
+var AuthToken = "AutoFtBot-agskjgdvsbdreiWG1234512SDKrqw"
+
 type Config struct {
 	Listen string `json:"listen"`
 	Cert   string `json:"cert"`
@@ -34,7 +34,6 @@ type Config struct {
 	} `json:"auth"`
 }
 
-// Struktur Request/Response
 type UserRequest struct {
 	Password string `json:"password"`
 	Days     int    `json:"days"`
@@ -49,6 +48,10 @@ type Response struct {
 var mutex = &sync.Mutex{}
 
 func main() {
+	if keyBytes, err := ioutil.ReadFile(ApiKeyFile); err == nil {
+		AuthToken = strings.TrimSpace(string(keyBytes))
+	}
+
 	http.HandleFunc("/api/user/create", authMiddleware(createUser))
 	http.HandleFunc("/api/user/delete", authMiddleware(deleteUser))
 	http.HandleFunc("/api/user/renew", authMiddleware(renewUser))
@@ -59,7 +62,6 @@ func main() {
 	log.Fatal(http.ListenAndServe(Port, nil))
 }
 
-// Middleware untuk autentikasi sederhana
 func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get("X-API-Key")
@@ -71,7 +73,6 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// Helper untuk mengirim respon JSON
 func jsonResponse(w http.ResponseWriter, status int, success bool, message string, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -82,7 +83,6 @@ func jsonResponse(w http.ResponseWriter, status int, success bool, message strin
 	})
 }
 
-// Handler: Buat User
 func createUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		jsonResponse(w, http.StatusMethodNotAllowed, false, "Method not allowed", nil)
@@ -103,7 +103,6 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	// 1. Cek apakah user sudah ada di config.json
 	config, err := loadConfig()
 	if err != nil {
 		jsonResponse(w, http.StatusInternalServerError, false, "Gagal membaca config", nil)
@@ -117,14 +116,12 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 2. Tambah ke config.json
 	config.Auth.Config = append(config.Auth.Config, req.Password)
 	if err := saveConfig(config); err != nil {
 		jsonResponse(w, http.StatusInternalServerError, false, "Gagal menyimpan config", nil)
 		return
 	}
 
-	// 3. Tambah ke users.db
 	expDate := time.Now().Add(time.Duration(req.Days) * 24 * time.Hour).Format("2006-01-02")
 	entry := fmt.Sprintf("%s | %s\n", req.Password, expDate)
 	
@@ -139,13 +136,11 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 4. Restart Service
 	if err := restartService(); err != nil {
 		jsonResponse(w, http.StatusInternalServerError, false, "Gagal merestart service", nil)
 		return
 	}
 
-	// 5. Read Domain
 	domain := "Tidak diatur"
 	if domainBytes, err := ioutil.ReadFile(DomainFile); err == nil {
 		domain = strings.TrimSpace(string(domainBytes))
@@ -158,7 +153,6 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Handler: Hapus User
 func deleteUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		jsonResponse(w, http.StatusMethodNotAllowed, false, "Method not allowed", nil)
@@ -174,7 +168,6 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	// 1. Hapus dari config.json
 	config, err := loadConfig()
 	if err != nil {
 		jsonResponse(w, http.StatusInternalServerError, false, "Gagal membaca config", nil)
@@ -202,7 +195,6 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Hapus dari users.db
 	users, err := loadUsers()
 	if err != nil {
 		jsonResponse(w, http.StatusInternalServerError, false, "Gagal membaca database user", nil)
@@ -223,7 +215,6 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Restart Service
 	if err := restartService(); err != nil {
 		jsonResponse(w, http.StatusInternalServerError, false, "Gagal merestart service", nil)
 		return
@@ -232,7 +223,6 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, http.StatusOK, true, "User berhasil dihapus", nil)
 }
 
-// Handler: Perpanjang User
 func renewUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		jsonResponse(w, http.StatusMethodNotAllowed, false, "Method not allowed", nil)
@@ -304,7 +294,6 @@ func renewUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Handler: List Users
 func listUsers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		jsonResponse(w, http.StatusMethodNotAllowed, false, "Method not allowed", nil)
@@ -346,17 +335,13 @@ func listUsers(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, http.StatusOK, true, "Daftar user", userList)
 }
 
-// Handler: System Info
 func getSystemInfo(w http.ResponseWriter, r *http.Request) {
-	// Mendapatkan IP Publik (sederhana)
 	cmd := exec.Command("curl", "-s", "ifconfig.me")
 	ipPub, _ := cmd.Output()
 
-	// Mendapatkan Hostname/IP Private
 	cmd = exec.Command("hostname", "-I")
 	ipPriv, _ := cmd.Output()
 
-	// Mendapatkan Domain
 	domain := "Tidak diatur"
 	if domainBytes, err := ioutil.ReadFile(DomainFile); err == nil {
 		domain = strings.TrimSpace(string(domainBytes))
