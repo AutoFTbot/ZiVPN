@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # ╔════════════════════════════════════════════════════════════════════╗
-# ║        🛡️ PANEL DE GESTIÓN ZIVPN UDP TUNNEL – MEJORADO            ║
+# ║        🛡️ MANAJER TUNNEL UDP ZIVPN – DITINGKATKAN                 ║
 # ╚════════════════════════════════════════════════════════════════════╝
 
-# 🎨 Colores
+# 🎨 Warna
 RED="\033[1;31m"
 GREEN="\033[1;32m"
 YELLOW="\033[1;33m"
@@ -12,71 +12,71 @@ BLUE="\033[1;34m"
 CYAN="\033[1;36m"
 RESET="\033[0m"
 
-# 🧭 Detección de arquitectura
+# 🧭 Deteksi Arsitektur
 ARCH=$(uname -m)
 if [[ "$ARCH" == "x86_64" ]]; then
   ARCH_TEXT="AMD64"
 elif [[ "$ARCH" == "aarch64" ]]; then
   ARCH_TEXT="ARM64"
 else
-  ARCH_TEXT="Desconocida"
+  ARCH_TEXT="Tidak Diketahui"
 fi
 
 # ╔══════════════════════════════════════════════════╗
-# ║ 🔍 FUNCIÓN: Mostrar puertos usados por zivpn      ║
+# ║ 🔍 FUNGSI: Tampilkan port yang digunakan zivpn    ║
 # ╚══════════════════════════════════════════════════╝
 mostrar_puertos_zivpn() {
-  # Obtener PID del proceso zivpn si está corriendo
+  # Dapatkan PID proses zivpn jika sedang berjalan
   PID=$(pgrep -f /usr/local/bin/zivpn)
   if [[ -z "$PID" ]]; then
-    echo -e " Puertos: ${RED}No se pudo detectar proceso zivpn.${RESET}"
+    echo -e " Port: ${RED}Tidak dapat mendeteksi proses zivpn.${RESET}"
     return
   fi
 
-  # Usar ss si está disponible
+  # Gunakan ss jika tersedia
   if command -v ss &>/dev/null; then
     PUERTOS=$(ss -tulnp | grep "$PID" | awk '{print $5}' | cut -d':' -f2 | sort -u | tr '\n' ',' | sed 's/,$//')
   else
-    # fallback a netstat
+    # fallback ke netstat
     PUERTOS=$(netstat -tulnp 2>/dev/null | grep "$PID" | awk '{print $4}' | rev | cut -d':' -f1 | rev | sort -u | tr '\n' ',' | sed 's/,$//')
   fi
 
   if [[ -z "$PUERTOS" ]]; then
-    echo -e " Puertos: ${YELLOW}No se detectaron puertos abiertos.${RESET}"
+    echo -e " Port: ${YELLOW}Tidak ada port terbuka yang terdeteksi.${RESET}"
   else
-    echo -e " Puertos: ${GREEN}$PUERTOS${RESET}"
+    echo -e " Port: ${GREEN}$PUERTOS${RESET}"
   fi
 }
 
 # ╔══════════════════════════════════════════════════╗
-# ║ 🔍 FUNCIÓN: Mostrar puerto fijo e iptables       ║
+# ║ 🔍 FUNGSI: Tampilkan port tetap dan iptables      ║
 # ╚══════════════════════════════════════════════════╝
 mostrar_puerto_iptables() {
   local PUERTO="5667"
   local IPTABLES="6000-19999"
-  echo -e " ${YELLOW}📛 Puerto:${RESET} ${GREEN}$PUERTO${RESET}   ${RED}🔥 Iptables:${RESET} ${CYAN}$IPTABLES${RESET}"
+  echo -e " ${YELLOW}📛 Port:${RESET} ${GREEN}$PUERTO${RESET}   ${RED}🔥 Iptables:${RESET} ${CYAN}$IPTABLES${RESET}"
 }
 
 # ╔══════════════════════════════════════════════════╗
-# ║ 🔍 FUNCIÓN: Mostrar estado del servicio ZIVPN    ║
+# ║ 🔍 FUNGSI: Tampilkan status layanan ZIVPN         ║
 # ╚══════════════════════════════════════════════════╝
 mostrar_estado_servicio() {
   if [ -f /usr/local/bin/zivpn ] && [ -f /etc/systemd/system/zivpn.service ]; then
     systemctl is-active --quiet zivpn.service
     if [ $? -eq 0 ]; then
-      echo -e " 🟢 Servicio ZIVPN UDP instalado y activo"
+      echo -e " 🟢 Layanan UDP ZIVPN terinstal dan aktif"
       mostrar_puerto_iptables
     else
-      echo -e " 🟡 Servicio ZIVPN UDP instalado pero ${YELLOW}no activo${RESET}"
+      echo -e " 🟡 Layanan UDP ZIVPN terinstal tetapi ${YELLOW}tidak aktif${RESET}"
       mostrar_puerto_iptables
     fi
   else
-    echo -e " 🔴 Servicio ZIVPN UDP ${RED}no instalado${RESET}"
+    echo -e " 🔴 Layanan UDP ZIVPN ${RED}tidak terinstal${RESET}"
   fi
 }
 
 # ╔══════════════════════════════════════════════════╗
-# ║ 🔍 FUNCIÓN: Mostrar estado del fix iptables      ║
+# ║ 🔍 FUNGSI: Tampilkan status fix iptables          ║
 # ╚══════════════════════════════════════════════════╝
 mostrar_estado_fix() {
   if [ -f /etc/zivpn-iptables-fix-applied ]; then
@@ -103,110 +103,118 @@ spinner() {
 }
 
 # ╔══════════════════════════════════════════════════╗
-# ║ 📋 Menú principal                                ║
+# ║ 📋 Menu Utama                                     ║
 # ╚══════════════════════════════════════════════════╝
 mostrar_menu() {
   echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-  echo -e "           🛠️ ${GREEN}ZIVPN UDP TUNNEL MANAGER${RESET}"
+  echo -e "           🛠️ ${GREEN}MANAJER TUNNEL UDP ZIVPN${RESET}"
   echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 
-  # Mostrar arquitectura
-  echo -e " 🔍 Arquitectura detectada: ${YELLOW}$ARCH_TEXT${RESET}"
+  # Dapatkan Domain
+  if [[ -f "/etc/zivpn/domain" ]]; then
+    DOMAIN=$(cat "/etc/zivpn/domain")
+  else
+    DOMAIN="Tidak diatur"
+  fi
 
-  # Mostrar estado del servicio
+  # Tampilkan arsitektur
+  echo -e " 🔍 Arsitektur terdeteksi: ${YELLOW}$ARCH_TEXT${RESET}"
+  echo -e " 🌐 Domain: ${YELLOW}$DOMAIN${RESET}"
+
+  # Tampilkan status layanan
   mostrar_estado_servicio
 
   echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-  echo -ne " ${YELLOW}1.${RESET} 🚀 Instalar Servicio UDP (${BLUE}AMD64${RESET})\n"
-  echo -ne " ${YELLOW}2.${RESET} 📦 Instalar Servicio UDP (${GREEN}ARM64${RESET})\n"
-  echo -ne " ${YELLOW}3.${RESET} ❌ Desinstalar Servicio UDP\n"
-  echo -ne " ${YELLOW}4.${RESET} 🔁 Aplicar Fix Persistente iptables $(mostrar_estado_fix)\n"
-  echo -ne " ${YELLOW}5.${RESET} 🔙 Salir\n"
+  echo -ne " ${YELLOW}1.${RESET} 🚀 Instal Layanan UDP (${BLUE}AMD64${RESET})\n"
+  echo -ne " ${YELLOW}2.${RESET} 📦 Instal Layanan UDP (${GREEN}ARM64${RESET})\n"
+  echo -ne " ${YELLOW}3.${RESET} ❌ Uninstall Layanan UDP\n"
+  echo -ne " ${YELLOW}4.${RESET} 🔁 Terapkan Fix Iptables Persisten $(mostrar_estado_fix)\n"
+  echo -ne " ${YELLOW}5.${RESET} 🔙 Keluar\n"
   echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-  echo -ne "📤 ${BLUE}Selecciona una opción:${RESET} "
+  echo -ne "📤 ${BLUE}Pilih opsi:${RESET} "
 }
 
 # ╔══════════════════════════════════════════════════╗
-# ║ 🚀 FUNCIONES DE INSTALACIÓN, DESINSTALACIÓN      ║
+# ║ 🚀 FUNGSI INSTALASI, UNINSTALL                    ║
 # ╚══════════════════════════════════════════════════╝
 
 instalar_amd() {
   clear
-  echo -e "${GREEN}🚀 Descargando instalador para AMD64...${RESET}"
-  wget -q https://raw.githubusercontent.com/ChristopherAGT/zivpn-tunnel-udp/main/install-amd.sh -O install-amd.sh &
+  echo -e "${GREEN}🚀 Mengunduh installer untuk AMD64...${RESET}"
+  wget -q https://raw.githubusercontent.com/AutoFTbot/ZiVPN/main/install-amd.sh -O install-amd.sh &
   spinner
   if [[ ! -f install-amd.sh ]]; then
-    echo -e "${RED}❌ Error: No se pudo descargar el archivo.${RESET}"
-    read -p "Presiona Enter para continuar..."
+    echo -e "${RED}❌ Error: Gagal mengunduh file.${RESET}"
+    read -p "Tekan Enter untuk melanjutkan..."
     return
   fi
-  echo -e "${GREEN}🔧 Ejecutando instalación...${RESET}"
+  echo -e "${GREEN}🔧 Menjalankan instalasi...${RESET}"
   bash install-amd.sh
   rm -f install-amd.sh
-  echo -e "${GREEN}✅ Instalación completada.${RESET}"
-  read -p "Presiona Enter para continuar..."
+  echo -e "${GREEN}✅ Instalasi selesai.${RESET}"
+  read -p "Tekan Enter untuk melanjutkan..."
 }
 
 instalar_arm() {
   clear
-  echo -e "${GREEN}📦 Descargando instalador para ARM64...${RESET}"
-  wget -q https://raw.githubusercontent.com/ChristopherAGT/zivpn-tunnel-udp/main/install-arm.sh -O install-arm.sh &
+  echo -e "${GREEN}📦 Mengunduh installer untuk ARM64...${RESET}"
+  wget -q https://raw.githubusercontent.com/AutoFTbot/ZiVPN/main/install-arm.sh -O install-arm.sh &
   spinner
   if [[ ! -f install-arm.sh ]]; then
-    echo -e "${RED}❌ Error: No se pudo descargar el archivo.${RESET}"
-    read -p "Presiona Enter para continuar..."
+    echo -e "${RED}❌ Error: Gagal mengunduh file.${RESET}"
+    read -p "Tekan Enter untuk melanjutkan..."
     return
   fi
-  echo -e "${GREEN}🔧 Ejecutando instalación...${RESET}"
+  echo -e "${GREEN}🔧 Menjalankan instalasi...${RESET}"
   bash install-arm.sh
   rm -f install-arm.sh
-  echo -e "${GREEN}✅ Instalación completada.${RESET}"
-  read -p "Presiona Enter para continuar..."
+  echo -e "${GREEN}✅ Instalasi selesai.${RESET}"
+  read -p "Tekan Enter untuk melanjutkan..."
 }
 
 desinstalar_udp() {
   clear
-  echo -e "${RED}🧹 Descargando script de desinstalación...${RESET}"
-  wget -q https://raw.githubusercontent.com/ChristopherAGT/zivpn-tunnel-udp/main/uninstall.sh -O uninstall.sh &
+  echo -e "${RED}🧹 Mengunduh script uninstall...${RESET}"
+  wget -q https://raw.githubusercontent.com/AutoFTbot/ZiVPN/main/uninstall.sh -O uninstall.sh &
   spinner
   if [[ ! -f uninstall.sh ]]; then
-    echo -e "${RED}❌ Error: No se pudo descargar el archivo.${RESET}"
-    read -p "Presiona Enter para continuar..."
+    echo -e "${RED}❌ Error: Gagal mengunduh file.${RESET}"
+    read -p "Tekan Enter untuk melanjutkan..."
     return
   fi
-  echo -e "${RED}⚙️ Ejecutando desinstalación...${RESET}"
+  echo -e "${RED}⚙️ Menjalankan uninstall...${RESET}"
   bash uninstall.sh
   rm -f uninstall.sh
-  echo -e "${GREEN}✅ Desinstalación completada.${RESET}"
-  read -p "Presiona Enter para continuar..."
+  echo -e "${GREEN}✅ Uninstall selesai.${RESET}"
+  read -p "Tekan Enter untuk melanjutkan..."
 }
 
 # ╔══════════════════════════════════════════════════╗
-# ║ 🛠️ FUNCIÓN: Aplicar fix iptables persistente    ║
+# ║ 🛠️ FUNGSI: Terapkan fix iptables persisten        ║
 # ╚══════════════════════════════════════════════════╝
 fix_iptables_zivpn() {
   clear
-  echo -e "${CYAN}🔧 Aplicando fix persistente iptables para ZIVPN...${RESET}"
-  wget -q https://raw.githubusercontent.com/ChristopherAGT/zivpn-tunnel-udp/main/zivpn-iptables-fix.sh -O zivpn-iptables-fix.sh
+  echo -e "${CYAN}🔧 Menerapkan fix iptables persisten untuk ZIVPN...${RESET}"
+  wget -q https://raw.githubusercontent.com/AutoFTbot/ZiVPN/main/zivpn-iptables-fix.sh -O zivpn-iptables-fix.sh
   if [[ ! -f zivpn-iptables-fix.sh ]]; then
-    echo -e "${RED}❌ Error: No se pudo descargar el fix.${RESET}"
-    read -p "Presiona Enter para continuar..."
+    echo -e "${RED}❌ Error: Gagal mengunduh fix.${RESET}"
+    read -p "Tekan Enter untuk melanjutkan..."
     return
   fi
   bash zivpn-iptables-fix.sh
   local res=$?
   rm -f zivpn-iptables-fix.sh
   if [[ $res -eq 0 ]]; then
-    # Crear archivo indicador para ON
-    touch /etc/zivpn-iptables-fix-applied 2>/dev/null || echo -e "${YELLOW}⚠️ No se pudo crear archivo indicador de estado.${RESET}"
-    echo -e "${GREEN}✅ Fix aplicado correctamente.${RESET}"
+    # Buat file indikator untuk ON
+    touch /etc/zivpn-iptables-fix-applied 2>/dev/null || echo -e "${YELLOW}⚠️ Gagal membuat file indikator status.${RESET}"
+    echo -e "${GREEN}✅ Fix berhasil diterapkan.${RESET}"
   else
-    echo -e "${RED}❌ Ocurrió un error al aplicar el fix.${RESET}"
+    echo -e "${RED}❌ Terjadi kesalahan saat menerapkan fix.${RESET}"
   fi
-  read -p "Presiona Enter para continuar..."
+  read -p "Tekan Enter untuk melanjutkan..."
 }
 
-# 🔁 Bucle del menú principal
+# 🔁 Loop menu utama
 while true; do
   clear
   mostrar_menu
@@ -216,7 +224,7 @@ while true; do
     2) instalar_arm ;;
     3) desinstalar_udp ;;
     4) fix_iptables_zivpn ;;
-    5) echo -e "${YELLOW}👋 ¡Hasta luego!${RESET}"; exit 0 ;;
-    *) echo -e "${RED}❌ Opción inválida. Intenta de nuevo.${RESET}"; sleep 2 ;;
+    5) echo -e "${YELLOW}👋 Sampai jumpa!${RESET}"; exit 0 ;;
+    *) echo -e "${RED}❌ Opsi tidak valid. Coba lagi.${RESET}"; sleep 2 ;;
   esac
 done

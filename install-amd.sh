@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # ╔════════════════════════════════════════════════════════════════════╗
-# ║       🚀 ZIVPN UDP MODULE INSTALLER                                            ║
-# ║       👤 Autor: Zahid Islam                                                    ║
-# ║       👤 Remasterización: ChristopherAGT                                       ║
-# ║       🛠️ Instala y configura el servicio UDP de ZIVPN                          ║
+# ║       🚀 INSTALLER MODUL UDP ZIVPN                                     ║
+# ║       👤 Penulis: Zahid Islam                                          ║
+# ║       👤 Remasterisasi: AutoFTbot                                      ║
+# ║       🛠️ Menginstal dan mengonfigurasi layanan UDP ZIVPN               ║
 # ╚════════════════════════════════════════════════════════════════════╝
 
-# Colores para presentación
+# Warna untuk presentasi
 GREEN="\033[1;32m"
 YELLOW="\033[1;33m"
 CYAN="\033[1;36m"
@@ -15,7 +15,7 @@ RED="\033[1;31m"
 MAGENTA="\033[1;35m"
 RESET="\033[0m"
 
-# Función para imprimir sección con borde
+# Fungsi untuk mencetak bagian dengan bingkai
 print_section() {
   local title="$1"
   echo -e "${MAGENTA}╔════════════════════════════════════════════════════════════════╗${RESET}"
@@ -23,7 +23,7 @@ print_section() {
   echo -e "${MAGENTA}╚════════════════════════════════════════════════════════════════╝${RESET}"
 }
 
-# Función para mostrar spinner y manejar errores
+# Fungsi untuk menampilkan spinner dan menangani error
 run_with_spinner() {
   local msg="$1"
   local cmd="$2"
@@ -48,8 +48,8 @@ run_with_spinner() {
     echo -e " ${GREEN}✔️${RESET}"
   else
     echo -e " ${RED}❌ Error${RESET}"
-    echo -e "${RED}🛑 Ocurrió un error al ejecutar:${RESET} ${YELLOW}$msg${RESET}"
-    echo -e "${RED}📄 Detalles del error:${RESET}"
+    echo -e "${RED}🛑 Terjadi kesalahan saat menjalankan:${RESET} ${YELLOW}$msg${RESET}"
+    echo -e "${RED}📄 Detail kesalahan:${RESET}"
     cat /tmp/zivpn_spinner.log
     exit 1
   fi
@@ -57,43 +57,58 @@ run_with_spinner() {
 }
 
 # ╔════════════════════════════════════════════════════════════════╗
-print_section "🔍 VERIFICANDO INSTALACIÓN PREVIA DE ZIVPN UDP"
+print_section "🔍 MEMERIKSA INSTALASI ZIVPN UDP SEBELUMNYA"
 if [ -f /usr/local/bin/zivpn ] || [ -f /etc/systemd/system/zivpn.service ]; then
-  echo -e "${YELLOW}⚠️  ZIVPN UDP parece estar ya instalado en este sistema.${RESET}"
-  echo -e "${YELLOW}Por seguridad, la instalación se detendrá para evitar sobrescribir.${RESET}"
+  echo -e "${YELLOW}⚠️  ZIVPN UDP tampaknya sudah terinstal di sistem ini.${RESET}"
+  echo -e "${YELLOW}Demi keamanan, instalasi akan dihentikan untuk menghindari penimpaan.${RESET}"
   exit 1
 fi
 
 # ╔════════════════════════════════════════════════════════════════╗
-print_section "📦 ACTUALIZANDO EL SISTEMA"
-run_with_spinner "🔄 Actualizando paquetes del sistema" "sudo apt-get update && sudo apt-get upgrade -y"
+print_section "📦 MEMPERBARUI SISTEM"
+run_with_spinner "🔄 Memperbarui paket sistem" "sudo apt-get update && sudo apt-get upgrade -y"
 
 # ╔════════════════════════════════════════════════════════════════╗
-print_section "⬇️ DESCARGANDO ZIVPN UDP"
-echo -e "${CYAN}📥 Descargando binario de ZIVPN...${RESET}"
+print_section "🌐 KONFIGURASI DOMAIN"
+echo -e "${YELLOW}⚠️  Domain diperlukan untuk konfigurasi sertifikat.${RESET}"
+while true; do
+  read -p "📌 Masukkan Domain/Host (contoh: vpn.domain.com): " domain
+  if [[ -z "$domain" ]]; then
+    echo -e "${RED}❌ Domain tidak boleh kosong.${RESET}"
+  else
+    echo -e "${GREEN}✅ Domain diset ke: $domain${RESET}"
+    break
+  fi
+done
+
+# ╔════════════════════════════════════════════════════════════════╗
+print_section "⬇️ MENGUNDUH ZIVPN UDP"
+echo -e "${CYAN}📥 Mengunduh binary ZIVPN...${RESET}"
 systemctl stop zivpn.service &>/dev/null
-wget -q https://github.com/ChristopherAGT/zivpn-tunnel-udp/releases/download/udp-zivpn_1.4.9/udp-zivpn-linux-amd64 -O /usr/local/bin/zivpn
+wget -q https://github.com/zahidbd2/udp-zivpn/releases/download/udp-zivpn_1.4.9/udp-zivpn-linux-amd64 -O /usr/local/bin/zivpn
 chmod +x /usr/local/bin/zivpn
 
-echo -e "${CYAN}📁 Preparando configuración...${RESET}"
+echo -e "${CYAN}📁 Menyiapkan konfigurasi...${RESET}"
 mkdir -p /etc/zivpn
-wget -q https://raw.githubusercontent.com/ChristopherAGT/zivpn-tunnel-udp/main/config.json -O /etc/zivpn/config.json
+echo "$domain" > /etc/zivpn/domain
+wget -q https://raw.githubusercontent.com/AutoFTbot/ZiVPN/main/config.json -O /etc/zivpn/config.json
 
 # ╔════════════════════════════════════════════════════════════════╗
-print_section "🔐 GENERANDO CERTIFICADOS SSL"
-run_with_spinner "🔐 Generando certificados SSL" "openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj '/C=US/ST=California/L=Los Angeles/O=Example Corp/OU=IT Department/CN=zivpn' -keyout /etc/zivpn/zivpn.key -out /etc/zivpn/zivpn.crt"
+print_section "🔐 MEMBUAT SERTIFIKAT SSL"
+echo -e "${CYAN}🔐 Membuat sertifikat SSL untuk ${YELLOW}$domain${CYAN}...${RESET}"
+run_with_spinner "🔐 Generating SSL" "openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj '/C=ID/ST=Jawa Barat/L=Bandung/O=AutoFTbot/OU=IT Department/CN=$domain' -keyout /etc/zivpn/zivpn.key -out /etc/zivpn/zivpn.crt"
 
 # ╔════════════════════════════════════════════════════════════════╗
-print_section "⚙️ OPTIMIZANDO PARÁMETROS DEL SISTEMA"
+print_section "⚙️ MENGOPTIMALKAN PARAMETER SISTEM"
 sysctl -w net.core.rmem_max=16777216 &>/dev/null
 sysctl -w net.core.wmem_max=16777216 &>/dev/null
 
 # ╔════════════════════════════════════════════════════════════════╗
-print_section "🧩 CREANDO SERVICIO SYSTEMD"
+print_section "🧩 MEMBUAT LAYANAN SYSTEMD"
 if [ -f /etc/systemd/system/zivpn.service ]; then
-    echo -e "${YELLOW}⚠️ El servicio ZIVPN ya existe. Se omitirá su creación.${RESET}"
+    echo -e "${YELLOW}⚠️ Layanan ZIVPN sudah ada. Pembuatan akan dilewati.${RESET}"
 else
-    echo -e "${CYAN}🔧 Configurando servicio systemd...${RESET}"
+    echo -e "${CYAN}🔧 Mengonfigurasi layanan systemd...${RESET}"
     cat <<EOF > /etc/systemd/system/zivpn.service
 [Unit]
 Description=ZIVPN UDP VPN Server
@@ -117,46 +132,26 @@ EOF
 fi
 
 # ╔════════════════════════════════════════════════════════════════╗
-: '
-# ╔════════════════════════════════════════════════════════════════╗
-# print_section "🔑 CONFIGURANDO CONTRASEÑAS"
-# echo -e "${YELLOW}🔑 Ingresa las contraseñas separadas por comas (Ej: pass1,pass2)"
-# read -p "🔐 Contraseñas (por defecto: zivpn): " input_config
-
-# if [ -n "$input_config" ]; then
-#     IFS=',' read -r -a config <<< "$input_config"
-#     [ ${#config[@]} -eq 1 ] && config+=("${config[0]}")
-# else
-#     config=("zivpn")
-# fi
-
-# new_config_str="\"config\": [$(printf "\"%s\"," "${config[@]}" | sed 's/,$//')]"
-# sed -i -E "s/\"config\": ?.*/${new_config_str}/g" /etc/zivpn/config.json
-'
-
-# ╔════════════════════════════════════════════════════════════════╗
-print_section "🚀 INICIANDO Y HABILITANDO SERVICIO"
+print_section "🚀 MEMULAI DAN MENGAKTIFKAN LAYANAN"
 systemctl enable zivpn.service
 systemctl start zivpn.service
 
 # ╔════════════════════════════════════════════════════════════════╗
-print_section "🌐 CONFIGURANDO IPTABLES Y FIREWALL"
+print_section "🌐 MENGONFIGURASI IPTABLES DAN FIREWALL"
 iface=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 if ! iptables -t nat -C PREROUTING -i "$iface" -p udp --dport 6000:19999 -j DNAT --to-destination :5667 &>/dev/null; then
     iptables -t nat -A PREROUTING -i "$iface" -p udp --dport 6000:19999 -j DNAT --to-destination :5667
 else
-    echo -e "${YELLOW}⚠️ La regla iptables ya existe. Se omite agregarla nuevamente.${RESET}"
+    echo -e "${YELLOW}⚠️ Aturan iptables sudah ada. Penambahan dilewati.${RESET}"
 fi
 
 ufw allow 6000:19999/udp
 ufw allow 5667/udp
 
 # ╔════════════════════════════════════════════════════════════════╗
-print_section "⬇️ INSTALANDO PANEL DE GESTIÓN"
-run_with_spinner "⬇️ Descargando panel de gestión (menu-zivpn)" "wget -q https://raw.githubusercontent.com/ChristopherAGT/zivpn-tunnel-udp/main/panel-udp-zivpn.sh -O /usr/local/bin/menu-zivpn && chmod +x /usr/local/bin/menu-zivpn"
-
-# ╔════════════════════════════════════════════════════════════════╗
-print_section "✅ FINALIZADO"
+print_section "✅ SELESAI"
 rm -f install-amd.sh install-amd.tmp install-amd.log &>/dev/null
-echo -e "${GREEN}✅ ZIVPN UDP instalado correctamente.${RESET}"
-echo -e "${GREEN}🔰 Usa el comando ${CYAN}menu-zivpn${GREEN} para abrir el panel de gestión.${RESET}"
+echo -e "${GREEN}✅ ZIVPN UDP berhasil diinstal.${RESET}"
+echo -e "${GREEN}🔰 Domain terkonfigurasi: ${YELLOW}$domain${RESET}"
+echo -e "${GREEN}🔰 Pembuatan user dilakukan tanpa UI, langsung menggunakan API Golang.${RESET}"
+echo -e "${GREEN}📄 Silakan cek dokumentasi Postman di repository AutoFTbot/ZiVPN.${RESET}"

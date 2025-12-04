@@ -1,53 +1,70 @@
 #!/bin/bash
 
 # ╔════════════════════════════════════════════════════════════╗
-# ║   🚀 ZIVPN UDP MODULE INSTALLER - ARM                     ║
-# ║   👤 Autor: Zahid Islam                                    ║
-# ║   💡 Versión para sistemas ARM64                           ║
+# ║   🚀 INSTALLER MODUL UDP ZIVPN - ARM                      ║
+# ║   👤 Penulis: Zahid Islam                                  ║
+# ║   👤 Remasterisasi: AutoFTbot                              ║
+# ║   💡 Versi untuk sistem ARM64                              ║
 # ╚════════════════════════════════════════════════════════════╝
 
-# 🎨 Colores
+# 🎨 Warna
 GREEN="\e[32m"
 YELLOW="\e[33m"
 CYAN="\e[36m"
+RED="\e[31m"
 RESET="\e[0m"
 
 # ╔════════════════════════════════════════════════════════════╗
-# ║  📦 ACTUALIZANDO EL SISTEMA                                ║
+# ║  📦 MEMPERBARUI SISTEM                                     ║
 # ╚════════════════════════════════════════════════════════════╝
-echo -e "${CYAN}🔄 Actualizando paquetes del sistema...${RESET}"
+echo -e "${CYAN}🔄 Memperbarui paket sistem...${RESET}"
 sudo apt-get update && sudo apt-get upgrade -y
 
 # ╔════════════════════════════════════════════════════════════╗
-# ║  ⬇️ DESCARGANDO ZIVPN PARA ARM64                          ║
+# ║  🌐 KONFIGURASI DOMAIN                                     ║
 # ╚════════════════════════════════════════════════════════════╝
-echo -e "${CYAN}📥 Descargando binario ARM64 de ZIVPN...${RESET}"
-systemctl stop zivpn.service &>/dev/null
-wget -q https://github.com/ChristopherAGT/zivpn-tunnel-udp/releases/download/udp-zivpn_1.4.9/udp-zivpn-linux-arm64 -O /usr/local/bin/zivpn
-chmod +x /usr/local/bin/zivpn
-
-echo -e "${CYAN}📁 Preparando directorio de configuración...${RESET}"
-mkdir -p /etc/zivpn
-wget -q https://raw.githubusercontent.com/ChristopherAGT/zivpn-tunnel-udp/main/config.json -O /etc/zivpn/config.json
+echo -e "${YELLOW}⚠️  Domain diperlukan untuk konfigurasi sertifikat.${RESET}"
+while true; do
+  read -p "📌 Masukkan Domain/Host (contoh: vpn.domain.com): " domain
+  if [[ -z "$domain" ]]; then
+    echo -e "${RED}❌ Domain tidak boleh kosong.${RESET}"
+  else
+    echo -e "${GREEN}✅ Domain diset ke: $domain${RESET}"
+    break
+  fi
+done
 
 # ╔════════════════════════════════════════════════════════════╗
-# ║  🔐 GENERANDO CERTIFICADOS SSL                             ║
+# ║  ⬇️ MENGUNDUH ZIVPN UNTUK ARM64                            ║
 # ╚════════════════════════════════════════════════════════════╝
-echo -e "${CYAN}🔐 Generando certificados autofirmados...${RESET}"
+echo -e "${CYAN}📥 Mengunduh binary ARM64 ZIVPN...${RESET}"
+systemctl stop zivpn.service &>/dev/null
+wget -q https://github.com/zahidbd2/udp-zivpn/releases/download/udp-zivpn_1.4.9/udp-zivpn-linux-arm64 -O /usr/local/bin/zivpn
+chmod +x /usr/local/bin/zivpn
+
+echo -e "${CYAN}📁 Menyiapkan direktori konfigurasi...${RESET}"
+mkdir -p /etc/zivpn
+echo "$domain" > /etc/zivpn/domain
+wget -q https://raw.githubusercontent.com/AutoFTbot/ZiVPN/main/config.json -O /etc/zivpn/config.json
+
+# ╔════════════════════════════════════════════════════════════╗
+# ║  🔐 MEMBUAT SERTIFIKAT SSL                                 ║
+# ╚════════════════════════════════════════════════════════════╝
+echo -e "${CYAN}🔐 Membuat sertifikat SSL untuk ${YELLOW}$domain${CYAN}...${RESET}"
 openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 \
--subj "/C=US/ST=California/L=Los Angeles/O=Example Corp/OU=IT Department/CN=zivpn" \
+-subj "/C=ID/ST=Jawa Barat/L=Bandung/O=AutoFTbot/OU=IT Department/CN=$domain" \
 -keyout "/etc/zivpn/zivpn.key" -out "/etc/zivpn/zivpn.crt"
 
 # ╔════════════════════════════════════════════════════════════╗
-# ║  ⚙️ OPTIMIZANDO PARÁMETROS DEL SISTEMA                     ║
+# ║  ⚙️ MENGOPTIMALKAN PARAMETER SISTEM                        ║
 # ╚════════════════════════════════════════════════════════════╝
 sysctl -w net.core.rmem_max=16777216 &>/dev/null
 sysctl -w net.core.wmem_max=16777216 &>/dev/null
 
 # ╔════════════════════════════════════════════════════════════╗
-# ║  🧩 CREANDO SERVICIO SYSTEMD                               ║
+# ║  🧩 MEMBUAT LAYANAN SYSTEMD                                ║
 # ╚════════════════════════════════════════════════════════════╝
-echo -e "${CYAN}🔧 Configurando servicio systemd...${RESET}"
+echo -e "${CYAN}🔧 Mengonfigurasi layanan systemd...${RESET}"
 cat <<EOF > /etc/systemd/system/zivpn.service
 [Unit]
 Description=ZIVPN UDP VPN Server (ARM)
@@ -70,29 +87,13 @@ WantedBy=multi-user.target
 EOF
 
 # ╔════════════════════════════════════════════════════════════╗
-# ║  🔑 CONFIGURANDO CONTRASEÑAS                               ║
-# ╚════════════════════════════════════════════════════════════╝
-echo -e "${YELLOW}🔑 Ingresa contraseñas separadas por comas (Ej: pass1,pass2)"
-read -p "🔐 Contraseñas (por defecto: zi): " input_config
-
-if [ -n "$input_config" ]; then
-    IFS=',' read -r -a config <<< "$input_config"
-    [ ${#config[@]} -eq 1 ] && config+=(${config[0]})
-else
-    config=("zi")
-fi
-
-new_config_str="\"config\": [$(printf "\"%s\"," "${config[@]}" | sed 's/,$//')]"
-sed -i -E "s/\"config\": ?[[:space:]]*\"zi\"[[:space:]]*/${new_config_str}/g" /etc/zivpn/config.json
-
-# ╔════════════════════════════════════════════════════════════╗
-# ║  🚀 INICIANDO Y HABILITANDO SERVICIO                       ║
+# ║  🚀 MEMULAI DAN MENGAKTIFKAN LAYANAN                       ║
 # ╚════════════════════════════════════════════════════════════╝
 systemctl enable zivpn.service
 systemctl start zivpn.service
 
 # ╔════════════════════════════════════════════════════════════╗
-# ║  🌐 CONFIGURANDO IPTABLES Y FIREWALL                       ║
+# ║  🌐 MENGONFIGURASI IPTABLES DAN FIREWALL                   ║
 # ╚════════════════════════════════════════════════════════════╝
 iface=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 iptables -t nat -A PREROUTING -i "$iface" -p udp --dport 6000:19999 -j DNAT --to-destination :5667
@@ -100,7 +101,10 @@ ufw allow 6000:19999/udp
 ufw allow 5667/udp
 
 # ╔════════════════════════════════════════════════════════════╗
-# ║  ✅ FINALIZACIÓN                                           ║
+# ║  ✅ SELESAI                                                ║
 # ╚════════════════════════════════════════════════════════════╝
 rm -f zi2.* &>/dev/null
-echo -e "${GREEN}✅ ZIVPN (ARM) instalado correctamente.${RESET}"
+echo -e "${GREEN}✅ ZIVPN (ARM) berhasil diinstal.${RESET}"
+echo -e "${GREEN}🔰 Domain terkonfigurasi: ${YELLOW}$domain${RESET}"
+echo -e "${GREEN}🔰 Pembuatan user dilakukan tanpa UI, langsung menggunakan API Golang.${RESET}"
+echo -e "${GREEN}📄 Silakan cek dokumentasi Postman di repository AutoFTbot/ZiVPN.${RESET}"
