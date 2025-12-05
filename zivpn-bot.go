@@ -386,7 +386,7 @@ func createUser(bot *tgbotapi.BotAPI, chatID int64, username string, days int) {
 		
 		ipInfo, _ := getIpInfo() // Abaikan kesalahan, cukup tampilkan kosong jika gagal
 		
-		msg := fmt.Sprintf("```\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n              ACCOUNT ZIVPN UDP\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nPassword       : %s\nCITY           : %s\nISP            : %s\nDomain         : %s\nExpired On     : %s\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n```",
+		msg := fmt.Sprintf("```\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n         ACCOUNT ZIVPN UDP\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nPassword       : %s\nCITY           : %s\nISP            : %s\nDomain         : %s\nExpired On     : %s\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n```",
 			data["password"], ipInfo.City, ipInfo.Isp, data["domain"], data["expired"])
 		
 		reply := tgbotapi.NewMessage(chatID, msg)
@@ -450,7 +450,7 @@ func renewUser(bot *tgbotapi.BotAPI, chatID int64, username string, days int) {
 			}
 		}
 
-		msg := fmt.Sprintf("```\n————————————————————————————————————\n               ZIVPN UDP\n————————————————————————————————————\nPassword       : %s\nCITY           : %s\nISP            : %s\nDomain         : %s\nExpired On     : %s\n————————————————————————————————————\n```",
+		msg := fmt.Sprintf("```\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n         ACCOUNT ZIVPN UDP\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nPassword       : %s\nCITY           : %s\nISP            : %s\nDomain         : %s\nExpired On     : %s\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n```",
 			data["password"], ipInfo.City, ipInfo.Isp, domain, data["expired"])
 		
 		reply := tgbotapi.NewMessage(chatID, msg)
