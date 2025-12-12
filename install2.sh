@@ -89,7 +89,6 @@ run_silent "Configuring" "wget -q https://raw.githubusercontent.com/AutoFTbot/Zi
 
 run_silent "Generating SSL" "openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj '/C=ID/ST=Jawa Barat/L=Bandung/O=AutoFTbot/OU=IT Department/CN=$domain' -keyout /etc/zivpn/zivpn.key -out /etc/zivpn/zivpn.crt"
 
-# Network Tuning
 cat >> /etc/sysctl.conf <<END
 net.core.default_qdisc=fq
 net.ipv4.tcp_congestion_control=bbr
@@ -129,7 +128,6 @@ NoNewPrivileges=true
 WantedBy=multi-user.target
 EOF
 
-# 11. API Setup
 mkdir -p /etc/zivpn/api
 run_silent "Setting up API" "wget -q https://raw.githubusercontent.com/AutoFTbot/ZiVPN/main/zivpn-api.go -O /etc/zivpn/api/zivpn-api.go && wget -q https://raw.githubusercontent.com/AutoFTbot/ZiVPN/main/go.mod -O /etc/zivpn/api/go.mod"
 
@@ -210,7 +208,7 @@ ufw allow 6000:19999/udp &>/dev/null
 ufw allow 5667/udp &>/dev/null
 ufw allow 8080/tcp &>/dev/null
 
-rm -f install.sh install.tmp install.log &>/dev/null
+rm -f "$0" install.tmp install.log &>/dev/null
 
 echo ""
 echo -e "${BOLD}Installation Complete${RESET}"
