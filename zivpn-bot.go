@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"regexp"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -174,13 +175,21 @@ func handleState(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, state string, conf
 
 	switch state {
 	case "create_username":
+		if len(text) < 3 || len(text) > 20 {
+			sendMessage(bot, msg.Chat.ID, "❌ Password harus 3-20 karakter. Coba lagi:")
+			return
+		}
+		if !regexp.MustCompile(`^[a-zA-Z0-9_-]+$`).MatchString(text) {
+			sendMessage(bot, msg.Chat.ID, "❌ Password hanya boleh huruf, angka, - dan _. Coba lagi:")
+			return
+		}
 		tempUserData[userID]["username"] = text
 		userStates[userID] = "create_days"
 		sendMessage(bot, msg.Chat.ID, "⏳ Masukkan Durasi (hari):")
 
 	case "create_days":
 		days, err := strconv.Atoi(text)
-		if err != nil {
+		if err != nil || days < 1 {
 			sendMessage(bot, msg.Chat.ID, "❌ Durasi harus angka. Coba lagi:")
 			return
 		}
@@ -189,7 +198,7 @@ func handleState(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, state string, conf
 
 	case "renew_days":
 		days, err := strconv.Atoi(text)
-		if err != nil {
+		if err != nil || days < 1 {
 			sendMessage(bot, msg.Chat.ID, "❌ Durasi harus angka. Coba lagi:")
 			return
 		}
