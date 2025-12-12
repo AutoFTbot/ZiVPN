@@ -163,18 +163,38 @@ echo -ne "${BOLD}Telegram Bot Configuration${RESET}\n"
 echo -ne "${GRAY}(Leave empty to skip)${RESET}\n"
 read -p "Bot Token: " bot_token
 read -p "Admin ID : " admin_id
-read -p "Bot Mode (public/private) [default: private]: " bot_mode
-bot_mode=${bot_mode:-private}
 
 if [[ -n "$bot_token" ]] && [[ -n "$admin_id" ]]; then
-  echo "{\"bot_token\": \"$bot_token\", \"admin_id\": $admin_id, \"mode\": \"$bot_mode\", \"domain\": \"$domain\"}" > /etc/zivpn/bot-config.json
+  echo ""
+  echo "Select Bot Type:"
+  echo "1) Free (Admin Only / Public Mode)"
+  echo "2) Paid (Pakasir Payment Gateway)"
+  read -p "Choice [1]: " bot_type
+  bot_type=${bot_type:-1}
+
+  if [[ "$bot_type" == "2" ]]; then
+    read -p "Pakasir Project Slug: " pakasir_slug
+    read -p "Pakasir API Key     : " pakasir_key
+    read -p "Daily Price (IDR)   : " daily_price
+    read -p "Default IP Limit    : " ip_limit
+    ip_limit=${ip_limit:-1}
+    
+    echo "{\"bot_token\": \"$bot_token\", \"admin_id\": $admin_id, \"mode\": \"public\", \"domain\": \"$domain\", \"pakasir_slug\": \"$pakasir_slug\", \"pakasir_api_key\": \"$pakasir_key\", \"daily_price\": $daily_price, \"default_ip_limit\": $ip_limit}" > /etc/zivpn/bot-config.json
+    bot_file="zivpn-paid-bot.go"
+  else
+    read -p "Bot Mode (public/private) [default: private]: " bot_mode
+    bot_mode=${bot_mode:-private}
+    
+    echo "{\"bot_token\": \"$bot_token\", \"admin_id\": $admin_id, \"mode\": \"$bot_mode\", \"domain\": \"$domain\"}" > /etc/zivpn/bot-config.json
+    bot_file="zivpn-bot.go"
+  fi
   
-  run_silent "Downloading Bot" "wget -q https://raw.githubusercontent.com/AutoFTbot/ZiVPN/main/zivpn-bot.go -O /etc/zivpn/api/zivpn-bot.go"
+  run_silent "Downloading Bot" "wget -q https://raw.githubusercontent.com/AutoFTbot/ZiVPN/main/$bot_file -O /etc/zivpn/api/$bot_file"
   
   cd /etc/zivpn/api
   run_silent "Downloading Bot Deps" "go get github.com/go-telegram-bot-api/telegram-bot-api/v5"
   
-  if go build -o zivpn-bot zivpn-bot.go &>/dev/null; then
+  if go build -o zivpn-bot "$bot_file" &>/dev/null; then
     print_done "Compiling Bot"
     
     cat <<EOF > /etc/systemd/system/zivpn-bot.service
