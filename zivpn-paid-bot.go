@@ -30,12 +30,13 @@ var ApiKey = "AutoFtBot-agskjgdvsbdreiWG1234512SDKrqw"
 
 type BotConfig struct {
 	BotToken      string `json:"bot_token"`
-	AdminID       int64  `json:"admin_id"`
-	Mode          string `json:"mode"`
-	Domain        string `json:"domain"`
-	PakasirSlug   string `json:"pakasir_slug"`
-	PakasirApiKey string `json:"pakasir_api_key"`
-	DailyPrice    int    `json:"daily_price"`
+	AdminID        int64  `json:"admin_id"`
+	Mode           string `json:"mode"`
+	Domain         string `json:"domain"`
+	PakasirSlug    string `json:"pakasir_slug"`
+	PakasirApiKey  string `json:"pakasir_api_key"`
+	DailyPrice     int    `json:"daily_price"`
+	DefaultIpLimit int    `json:"default_ip_limit"`
 }
 
 type IpInfo struct {
@@ -127,7 +128,7 @@ func handleCallback(bot *tgbotapi.BotAPI, query *tgbotapi.CallbackQuery, config 
 		systemInfo(bot, chatID, config)
 	case query.Data == "cancel":
 		cancelOperation(bot, chatID, userID, config)
-	
+
 	// Payment Check
 	case strings.HasPrefix(query.Data, "check_payment:"):
 		orderID := strings.TrimPrefix(query.Data, "check_payment:")
@@ -157,7 +158,7 @@ func handleState(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, state string, conf
 			return
 		}
 		tempUserData[userID]["days"] = text
-		
+
 		// Process Payment
 		processPayment(bot, chatID, userID, days, config)
 	}
@@ -175,8 +176,12 @@ func startCreateUser(bot *tgbotapi.BotAPI, chatID int64, userID int64) {
 
 func processPayment(bot *tgbotapi.BotAPI, chatID int64, userID int64, days int, config *BotConfig) {
 	price := days * config.DailyPrice
+	if price < 500 {
+		sendMessage(bot, chatID, fmt.Sprintf("❌ Total harga Rp %d. Minimal transaksi adalah Rp 500.\nSilakan tambah durasi.", price))
+		return
+	}
 	orderID := fmt.Sprintf("ZIVPN-%d-%d", userID, time.Now().Unix())
-	
+
 	// Call Pakasir API
 	payment, err := createPakasirTransaction(config, orderID, price)
 	if err != nil {
@@ -192,13 +197,13 @@ func processPayment(bot *tgbotapi.BotAPI, chatID int64, userID int64, days int, 
 	// Generate QR Image URL
 	qrUrl := fmt.Sprintf("https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%s", payment.PaymentNumber)
 
-	msgText := fmt.Sprintf("💳 **Tagihan Pembayaran**\n\nUsername: `%s`\nDurasi: %d Hari\nTotal: Rp %d\n\nSilakan scan QRIS di atas untuk membayar.\nExpired: %s", 
+	msgText := fmt.Sprintf("💳 **Tagihan Pembayaran**\n\nUsername: `%s`\nDurasi: %d Hari\nTotal: Rp %d\n\nSilakan scan QRIS di atas untuk membayar.\nExpired: %s",
 		tempUserData[userID]["username"], days, price, payment.ExpiredAt)
 
 	photo := tgbotapi.NewPhoto(chatID, tgbotapi.FileURL(qrUrl))
 	photo.Caption = msgText
 	photo.ParseMode = "Markdown"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("✅ Cek Pembayaran", "check_payment:"+orderID),
@@ -206,13 +211,13 @@ func processPayment(bot *tgbotapi.BotAPI, chatID int64, userID int64, days int, 
 		),
 	)
 	photo.ReplyMarkup = keyboard
-	
+
 	deleteLastMessage(bot, chatID)
 	sentMsg, err := bot.Send(photo)
 	if err == nil {
 		lastMessageIDs[chatID] = sentMsg.MessageID
 	}
-	
+
 	// Clear state but keep tempUserData for verification
 	delete(userStates, userID)
 }
@@ -234,8 +239,14 @@ func checkPayment(bot *tgbotapi.BotAPI, chatID int64, userID int64, orderID stri
 		// Payment Success -> Create Account
 		username := tempUserData[userID]["username"]
 		days, _ := strconv.Atoi(tempUserData[userID]["days"])
-		
-		createUser(bot, chatID, username, days, 1, config) // Default limit 1 for paid users? Or configurable?
+
+		// Use DefaultIpLimit from config
+		limit := config.DefaultIpLimit
+		if limit < 1 {
+			limit = 1 // Fallback
+		}
+
+		createUser(bot, chatID, username, days, limit, config)
 		delete(tempUserData, userID)
 	} else {
 		bot.Request(tgbotapi.NewCallback(queryID, "Pembayaran belum diterima / "+status))
