@@ -236,7 +236,7 @@ rm -f "$0" install.tmp install.log &>/dev/null
 echo ""
 echo -e "${BOLD}Installation Complete${RESET}"
 echo -e "Domain  : ${CYAN}$domain${RESET}"
-echo -e "API     : ${CYAN}Port 8080${RESET}"
+echo -e "API     : ${CYAN}Port 6969${RESET}"
 echo -e "Token   : ${CYAN}$api_key${RESET}"
 echo -e "Dev     : ${CYAN}https://t.me/AutoFTBot${RESET}"
 echo ""
