@@ -29,9 +29,10 @@ const (
 	ApiPortFile   = "/etc/zivpn/api_port"
 	ApiKeyFile    = "/etc/zivpn/apikey"
 	DomainFile    = "/etc/zivpn/domain"
+	PortFile	  = "/etc/zivpn/port"
 )
 
-var ApiUrl = "http://127.0.0.1:8080/api"
+var ApiUrl = "http://127.0.0.1:" + PortFile + "/api"
 
 var ApiKey = "AutoFtBot-agskjgdvsbdreiWG1234512SDKrqw"
 
@@ -274,24 +275,17 @@ func checkPayment(bot *tgbotapi.BotAPI, chatID int64, userID int64, orderID stri
 		username := tempUserData[userID]["username"]
 		days, _ := strconv.Atoi(tempUserData[userID]["days"])
 
-		// Use DefaultIpLimit from config
-		limit := config.DefaultIpLimit
-		if limit < 1 {
-			limit = 1 // Fallback
-		}
-
-		createUser(bot, chatID, username, days, limit, config)
+		createUser(bot, chatID, username, days, config)
 		delete(tempUserData, userID)
 	} else {
 		bot.Request(tgbotapi.NewCallback(queryID, "Pembayaran belum diterima / "+status))
 	}
 }
 
-func createUser(bot *tgbotapi.BotAPI, chatID int64, username string, days int, limit int, config *BotConfig) {
+func createUser(bot *tgbotapi.BotAPI, chatID int64, username string, days int, config *BotConfig) {
 	res, err := apiCall("POST", "/user/create", map[string]interface{}{
 		"password": username,
 		"days":     days,
-		"ip_limit": limit,
 	})
 
 	if err != nil {
@@ -301,7 +295,7 @@ func createUser(bot *tgbotapi.BotAPI, chatID int64, username string, days int, l
 
 	if res["success"] == true {
 		data := res["data"].(map[string]interface{})
-		sendAccountInfo(bot, chatID, data, limit, config)
+		sendAccountInfo(bot, chatID, data, config)
 	} else {
 		replyError(bot, chatID, fmt.Sprintf("Gagal membuat akun: %s", res["message"]))
 	}
@@ -403,15 +397,15 @@ func showMainMenu(bot *tgbotapi.BotAPI, chatID int64, config *BotConfig) {
 	sendAndTrack(bot, msg)
 }
 
-func sendAccountInfo(bot *tgbotapi.BotAPI, chatID int64, data map[string]interface{}, limit int, config *BotConfig) {
+func sendAccountInfo(bot *tgbotapi.BotAPI, chatID int64, data map[string]interface{}, config *BotConfig) {
 	ipInfo, _ := getIpInfo()
 	domain := config.Domain
 	if domain == "" {
 		domain = "(Not Configured)"
 	}
 
-	msg := fmt.Sprintf("```\n━━━━━━━━━━━━━━━━━━━━━\n  PREMIUM ACCOUNT\n━━━━━━━━━━━━━━━━━━━━━\nPassword   : %s\nLimit IP   : %d Device\nCITY       : %s\nISP        : %s\nDomain     : %s\nExpired On : %s\n━━━━━━━━━━━━━━━━━━━━━\n```\nTerima kasih telah berlangganan!",
-		data["password"], limit, ipInfo.City, ipInfo.Isp, domain, data["expired"],
+	msg := fmt.Sprintf("```\n━━━━━━━━━━━━━━━━━━━━━\n  PREMIUM ACCOUNT\n━━━━━━━━━━━━━━━━━━━━━\nPassword   : %s\nCITY       : %s\nISP        : %s\nDomain     : %s\nExpired On : %s\n━━━━━━━━━━━━━━━━━━━━━\n```\nTerima kasih telah berlangganan!",
+		data["password"], ipInfo.City, ipInfo.Isp, domain, data["expired"],
 	)
 
 	reply := tgbotapi.NewMessage(chatID, msg)
@@ -529,9 +523,7 @@ func performBackup(bot *tgbotapi.BotAPI, chatID int64) {
 	files := []string{
 		"/etc/zivpn/config.json",
 		"/etc/zivpn/users.json",
-		"/etc/zivpn/bot-config.json",
 		"/etc/zivpn/domain",
-		"/etc/zivpn/apikey",
 	}
 
 	buf := new(bytes.Buffer)
@@ -652,8 +644,15 @@ func processRestoreFile(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, config *Bot
 	exec.Command("systemctl", "restart", "zivpn").Run()
 	exec.Command("systemctl", "restart", "zivpn-api").Run()
 	
-	msgSuccess := tgbotapi.NewMessage(chatID, "✅ Restore Berhasil!\nService ZiVPN telah direstart.")
+	msgSuccess := tgbotapi.NewMessage(chatID, "✅ Restore Berhasil!\nService ZiVPN, API, dan Bot telah direstart.")
 	bot.Send(msgSuccess)
+
+	// Restart Bot with delay to allow message sending
+	go func() {
+		time.Sleep(2 * time.Second)
+		exec.Command("systemctl", "restart", "zivpn-bot").Run()
+	}()
+
 	showMainMenu(bot, chatID, config)
 }
 
