@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -64,6 +65,7 @@ type UserData struct {
 var userStates = make(map[int64]string)
 var tempUserData = make(map[int64]map[string]string)
 var lastMessageIDs = make(map[int64]int)
+var mutex = &sync.Mutex{}
 
 // ==========================================
 // Main Entry Point
@@ -95,7 +97,11 @@ func main() {
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
+	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
+
+	// Start Payment Checker
+	go startPaymentChecker(bot, &config)
 
 	for update := range updates {
 		if update.Message != nil {
@@ -161,11 +167,6 @@ func handleCallback(bot *tgbotapi.BotAPI, query *tgbotapi.CallbackQuery, config 
 		if userID == config.AdminID {
 			startRestore(bot, chatID, userID)
 		}
-
-	// Payment Check
-	case strings.HasPrefix(query.Data, "check_payment:"):
-		orderID := strings.TrimPrefix(query.Data, "check_payment:")
-		checkPayment(bot, chatID, userID, orderID, query.ID, config)
 	}
 
 	bot.Request(tgbotapi.NewCallback(query.ID, ""))
@@ -177,11 +178,13 @@ func handleState(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, state string, conf
 	chatID := msg.Chat.ID
 
 	switch state {
-	case "create_username":
-		if !validateUsername(bot, chatID, text) {
+	case "create_password":
+		if !validatePassword(bot, chatID, text) {
 			return
 		}
-		tempUserData[userID]["username"] = text
+		mutex.Lock()
+		tempUserData[userID]["password"] = text
+		mutex.Unlock()
 		userStates[userID] = "create_days"
 		sendMessage(bot, chatID, fmt.Sprintf("⏳ Masukkan Durasi (hari)\nHarga: Rp %d / hari:", config.DailyPrice))
 
@@ -190,7 +193,9 @@ func handleState(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, state string, conf
 		if !ok {
 			return
 		}
+		mutex.Lock()
 		tempUserData[userID]["days"] = text
+		mutex.Unlock()
 
 		// Process Payment
 		processPayment(bot, chatID, userID, days, config)
@@ -202,9 +207,12 @@ func handleState(bot *tgbotapi.BotAPI, msg *tgbotapi.Message, state string, conf
 // ==========================================
 
 func startCreateUser(bot *tgbotapi.BotAPI, chatID int64, userID int64) {
-	userStates[userID] = "create_username"
+	userStates[userID] = "create_password"
+	mutex.Lock()
 	tempUserData[userID] = make(map[string]string)
-	sendMessage(bot, chatID, "👤 Masukkan Username Baru:")
+	tempUserData[userID]["chat_id"] = strconv.FormatInt(chatID, 10)
+	mutex.Unlock()
+	sendMessage(bot, chatID, "👤 Masukkan Password Baru:")
 }
 
 func processPayment(bot *tgbotapi.BotAPI, chatID int64, userID int64, days int, config *BotConfig) {
@@ -224,14 +232,16 @@ func processPayment(bot *tgbotapi.BotAPI, chatID int64, userID int64, days int, 
 	}
 
 	// Store Order ID for verification
+	mutex.Lock()
 	tempUserData[userID]["order_id"] = orderID
 	tempUserData[userID]["price"] = strconv.Itoa(price)
+	mutex.Unlock()
 
 	// Generate QR Image URL
 	qrUrl := fmt.Sprintf("https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%s", payment.PaymentNumber)
 
-	msgText := fmt.Sprintf("💳 **Tagihan Pembayaran**\n\nUsername: `%s`\nDurasi: %d Hari\nTotal: Rp %d\n\nSilakan scan QRIS di atas untuk membayar.\nExpired: %s",
-		tempUserData[userID]["username"], days, price, payment.ExpiredAt)
+	msgText := fmt.Sprintf("💳 **Tagihan Pembayaran**\n\nPassword: `%s`\nDurasi: %d Hari\nTotal: Rp %d\n\nSilakan scan QRIS di atas untuk membayar.\nSistem akan otomatis mengecek pembayaran setiap menit.\nExpired: %s",
+		tempUserData[userID]["password"], days, price, payment.ExpiredAt)
 
 	photo := tgbotapi.NewPhoto(chatID, tgbotapi.FileURL(qrUrl))
 	photo.Caption = msgText
@@ -239,7 +249,6 @@ func processPayment(bot *tgbotapi.BotAPI, chatID int64, userID int64, days int, 
 
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("✅ Cek Pembayaran", "check_payment:"+orderID),
 			tgbotapi.NewInlineKeyboardButtonData("❌ Batal", "cancel"),
 		),
 	)
@@ -255,34 +264,36 @@ func processPayment(bot *tgbotapi.BotAPI, chatID int64, userID int64, days int, 
 	delete(userStates, userID)
 }
 
-func checkPayment(bot *tgbotapi.BotAPI, chatID int64, userID int64, orderID string, queryID string, config *BotConfig) {
-	// Verify data exists
-	if tempUserData[userID]["order_id"] != orderID {
-		replyError(bot, chatID, "Data transaksi tidak ditemukan. Silakan ulangi.")
-		return
-	}
-
-	status, err := checkPakasirStatus(config, orderID, tempUserData[userID]["price"])
-	if err != nil {
-		bot.Request(tgbotapi.NewCallback(queryID, "Error: "+err.Error())) // Show alert
-		return
-	}
-
-	if status == "completed" || status == "success" {
-		// Payment Success -> Create Account
-		username := tempUserData[userID]["username"]
-		days, _ := strconv.Atoi(tempUserData[userID]["days"])
-
-		createUser(bot, chatID, username, days, config)
-		delete(tempUserData, userID)
-	} else {
-		bot.Request(tgbotapi.NewCallback(queryID, "Pembayaran belum diterima / "+status))
+func startPaymentChecker(bot *tgbotapi.BotAPI, config *BotConfig) {
+	ticker := time.NewTicker(1 * time.Minute)
+	for range ticker.C {
+		mutex.Lock()
+		for userID, data := range tempUserData {
+			if orderID, ok := data["order_id"]; ok {
+				price := data["price"]
+				chatID, _ := strconv.ParseInt(data["chat_id"], 10, 64)
+				
+				status, err := checkPakasirStatus(config, orderID, price)
+				if err == nil && (status == "completed" || status == "success") {
+					// Payment Success
+					password := data["password"]
+					days, _ := strconv.Atoi(data["days"])
+					
+					createUser(bot, chatID, password, days, config)
+					delete(tempUserData, userID)
+					delete(userStates, userID)
+				} else if err != nil {
+					log.Printf("Error checking payment for %d: %v", userID, err)
+				}
+			}
+		}
+		mutex.Unlock()
 	}
 }
 
-func createUser(bot *tgbotapi.BotAPI, chatID int64, username string, days int, config *BotConfig) {
+func createUser(bot *tgbotapi.BotAPI, chatID int64, password string, days int, config *BotConfig) {
 	res, err := apiCall("POST", "/user/create", map[string]interface{}{
-		"password": username,
+		"password": password,
 		"days":     days,
 	})
 
@@ -379,13 +390,13 @@ func showMainMenu(bot *tgbotapi.BotAPI, chatID int64, config *BotConfig) {
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🛒 Beli Akun Premium", "menu_create"),
 		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("📊 System Info", "menu_info"),
-		),
 	)
 
 	// Add Admin Panel for Admin
 	if chatID == config.AdminID {
+		keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("📊 System Info", "menu_info"),
+		))
 		keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🛠️ Admin Panel", "menu_admin"),
 		))
@@ -454,7 +465,7 @@ func resetState(userID int64) {
 	// Don't delete tempUserData immediately if pending payment, but here we do for cancel
 }
 
-func validateUsername(bot *tgbotapi.BotAPI, chatID int64, text string) bool {
+func validatePassword(bot *tgbotapi.BotAPI, chatID int64, text string) bool {
 	if len(text) < 3 || len(text) > 20 {
 		sendMessage(bot, chatID, "❌ Password harus 3-20 karakter. Coba lagi:")
 		return false
