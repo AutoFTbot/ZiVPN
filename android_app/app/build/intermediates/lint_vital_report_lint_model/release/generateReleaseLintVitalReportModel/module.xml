@@ -1,0 +1,19 @@
+<lint-module
+    format="1"
+    dir="/home/agin/Documents/ZIVPN/ZiVPN/ZiVPN/android_app/app"
+    name=":app"
+    type="APP"
+    maven="ZiVPN Manager:app:"
+    agpVersion="8.2.0"
+    buildFolder="build"
+    bootClassPath="/home/agin/Android/Sdk/platforms/android-33/android.jar:/home/agin/Android/Sdk/build-tools/34.0.0/core-lambda-stubs.jar"
+    javaSourceLevel="1.8"
+    compileTarget="android-33"
+    neverShrinking="true">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>

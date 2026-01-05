@@ -1,0 +1,10 @@
+#Mon Jan 05 18:11:50 WIB 2026
+base.0=/home/agin/Documents/ZIVPN/ZiVPN/ZiVPN/android_app/app/build/intermediates/dex/release/mergeDexRelease/classes.dex
+base.1=/home/agin/Documents/ZIVPN/ZiVPN/ZiVPN/android_app/app/build/intermediates/global_synthetics_dex/release/classes.dex
+base.2=/home/agin/Documents/ZIVPN/ZiVPN/ZiVPN/android_app/app/build/intermediates/dex/release/mergeDexRelease/classes2.dex
+path.0=classes.dex
+path.1=classes.dex
+path.2=classes2.dex
+renamed.0=classes.dex
+renamed.1=classes2.dex
+renamed.2=classes3.dex

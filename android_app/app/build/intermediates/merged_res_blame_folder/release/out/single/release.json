@@ -1,0 +1,138 @@
+[
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-xhdpi_ic_launcher_round.webp.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-xhdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-xhdpi_ic_launcher.webp.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-xhdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/anim_anim_check_path.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/anim/anim_check_path.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-hdpi_ic_launcher.webp.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-hdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/drawable_bg_button_primary.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/drawable/bg_button_primary.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/layout_fragment_vpn.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/layout/fragment_vpn.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-xxhdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-xxhdpi/ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-mdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-mdpi/ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/drawable_avd_check.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/drawable/avd_check.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/menu_bottom_nav.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/menu/bottom_nav.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/drawable_ic_globe.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/drawable/ic_globe.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-xxxhdpi_ic_launcher_round.webp.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-xxxhdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/layout_item_user.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/layout/item_user.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/layout_activity_server_list.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/layout/activity_server_list.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-hdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-hdpi/ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/layout_activity_add_server.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/layout/activity_add_server.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/layout_item_server.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/layout/item_server.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/drawable_ic_check_vector.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/drawable/ic_check_vector.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-xxxhdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-xxxhdpi/ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-xxhdpi_ic_launcher.webp.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-xxhdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-xxxhdpi_ic_launcher.webp.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-xxxhdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-hdpi_ic_launcher_round.webp.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-hdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/layout_fragment_create.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/layout/fragment_create.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-mdpi_ic_launcher_round.webp.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-mdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/layout_fragment_user_list.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/layout/fragment_user_list.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/drawable_bg_input_field.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/drawable/bg_input_field.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/layout_activity_main.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-xhdpi_ic_launcher_foreground.webp.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-xhdpi/ic_launcher_foreground.webp"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/layout_activity_result.xml.flat",
+        "source": "com.zivpn.manager.app-main-34:/layout/activity_result.xml"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-mdpi_ic_launcher.webp.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-mdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.zivpn.manager.app-merged_res-33:/mipmap-xxhdpi_ic_launcher_round.webp.flat",
+        "source": "com.zivpn.manager.app-main-34:/mipmap-xxhdpi/ic_launcher_round.webp"
+    }
+]
