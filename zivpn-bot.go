@@ -169,6 +169,10 @@ func handleCallback(bot *tgbotapi.BotAPI, query *tgbotapi.CallbackQuery, config 
 		if userID == config.AdminID {
 			listUsers(bot, chatID)
 		}
+	case query.Data == "menu_cleanup":
+		if userID == config.AdminID {
+			cleanupExpiredUsers(bot, chatID, config)
+		}
 	case query.Data == "menu_info":
 		if userID == config.AdminID {
 			systemInfo(bot, chatID, config)
@@ -420,6 +424,44 @@ func systemInfo(bot *tgbotapi.BotAPI, chatID int64, config *BotConfig) {
 	}
 }
 
+func cleanupExpiredUsers(bot *tgbotapi.BotAPI, chatID int64, config *BotConfig) {
+	sendMessage(bot, chatID, "⏳ Sedang membersihkan akun expired...")
+
+	res, err := apiCall("POST", "/cron/cleanup", nil)
+	if err != nil {
+		replyError(bot, chatID, "Error API: "+err.Error())
+		showMainMenu(bot, chatID, config)
+		return
+	}
+
+	if res["success"] == true {
+		data := res["data"]
+		if data != nil {
+			dataMap := data.(map[string]interface{})
+			count := int(dataMap["deleted_count"].(float64))
+			if count > 0 {
+				deletedUsers := dataMap["deleted_users"].([]interface{})
+				userList := ""
+				for _, u := range deletedUsers {
+					userList += fmt.Sprintf("\n• `%s`", u.(string))
+				}
+				msg := fmt.Sprintf("✅ Berhasil menghapus %d akun expired:%s", count, userList)
+				reply := tgbotapi.NewMessage(chatID, msg)
+				reply.ParseMode = "Markdown"
+				deleteLastMessage(bot, chatID)
+				bot.Send(reply)
+			} else {
+				sendMessage(bot, chatID, "✅ Tidak ada akun expired yang perlu dihapus.")
+			}
+		} else {
+			sendMessage(bot, chatID, "✅ "+res["message"].(string))
+		}
+	} else {
+		replyError(bot, chatID, fmt.Sprintf("Gagal: %s", res["message"]))
+	}
+	showMainMenu(bot, chatID, config)
+}
+
 func showBackupRestoreMenu(bot *tgbotapi.BotAPI, chatID int64) {
 	msg := tgbotapi.NewMessage(chatID, "💾 *Backup & Restore*\nSilakan pilih menu:")
 	msg.ParseMode = "Markdown"
@@ -620,6 +662,7 @@ func getMainMenuKeyboard(config *BotConfig, userID int64) tgbotapi.InlineKeyboar
 			tgbotapi.NewInlineKeyboardButtonData("💾 Backup & Restore", "menu_backup_restore"),
 		))
 		rows = append(rows, tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("🧹 Cleanup Expired", "menu_cleanup"),
 			tgbotapi.NewInlineKeyboardButtonData(modeLabel, "toggle_mode"),
 		))
 	}

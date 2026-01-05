@@ -68,6 +68,7 @@ func main() {
 	http.HandleFunc("/api/users", authMiddleware(listUsers))
 	http.HandleFunc("/api/info", authMiddleware(getSystemInfo))
 	http.HandleFunc("/api/cron/expire", authMiddleware(checkExpiration))
+	http.HandleFunc("/api/cron/cleanup", authMiddleware(cleanupExpired))
 
 	log.Printf("Server started at :%d", *port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), nil))
@@ -419,6 +420,86 @@ func checkExpiration(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResponse(w, http.StatusOK, true, fmt.Sprintf("Expiration check complete. Revoked: %d", revokedCount), nil)
+}
+
+// cleanupExpired menghapus semua akun expired dari config.json DAN users.json
+func cleanupExpired(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		jsonResponse(w, http.StatusMethodNotAllowed, false, "Method not allowed", nil)
+		return
+	}
+
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	users, err := loadUsers()
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, false, "Gagal membaca database user", nil)
+		return
+	}
+
+	config, err := loadConfig()
+	if err != nil {
+		jsonResponse(w, http.StatusInternalServerError, false, "Gagal membaca config", nil)
+		return
+	}
+
+	today := time.Now().Format("2006-01-02")
+
+	// Collect expired passwords
+	expiredPasswords := make(map[string]bool)
+	for _, u := range users {
+		if u.Expired < today {
+			expiredPasswords[u.Password] = true
+		}
+	}
+
+	if len(expiredPasswords) == 0 {
+		jsonResponse(w, http.StatusOK, true, "Tidak ada akun expired", nil)
+		return
+	}
+
+	// Remove from users.json
+	activeUsers := []UserStore{}
+	for _, u := range users {
+		if !expiredPasswords[u.Password] {
+			activeUsers = append(activeUsers, u)
+		}
+	}
+
+	// Remove from config.json
+	activeConfig := []string{}
+	for _, p := range config.Auth.Config {
+		if !expiredPasswords[p] {
+			activeConfig = append(activeConfig, p)
+		}
+	}
+	config.Auth.Config = activeConfig
+
+	// Save both
+	if err := saveUsers(activeUsers); err != nil {
+		jsonResponse(w, http.StatusInternalServerError, false, "Gagal menyimpan users.json", nil)
+		return
+	}
+
+	if err := saveConfig(config); err != nil {
+		jsonResponse(w, http.StatusInternalServerError, false, "Gagal menyimpan config.json", nil)
+		return
+	}
+
+	// Restart service
+	restartService()
+
+	deletedCount := len(expiredPasswords)
+	deletedList := []string{}
+	for p := range expiredPasswords {
+		deletedList = append(deletedList, p)
+	}
+
+	jsonResponse(w, http.StatusOK, true, fmt.Sprintf("Berhasil menghapus %d akun expired", deletedCount), map[string]interface{}{
+		"deleted_count": deletedCount,
+		"deleted_users": deletedList,
+	})
 }
 
 func revokeAccess(password string) {

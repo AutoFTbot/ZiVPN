@@ -194,6 +194,32 @@
                         "description": "Manually trigger the daily expiration check (usually run by Cron)."
                     },
                     "response": []
+                },
+                {
+                    "name": "Cleanup Expired Users",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-Key",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/cron/cleanup",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "cron",
+                                "cleanup"
+                            ]
+                        },
+                        "description": "Delete all expired users from both config.json and users.json database."
+                    },
+                    "response": []
                 }
             ]
         }

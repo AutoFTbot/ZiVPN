@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ZiVPN</string>
+    <string name="server_name">Nama Server</string>
+    <string name="server_domain">Domain/IP</string>
+    <string name="server_port">Port VPN</string>
+    <string name="api_port">Port API</string>
+    <string name="api_key">API Key</string>
+    <string name="obfs">Obfuscation Key</string>
+    <string name="password">Password</string>
+    <string name="days">Durasi (hari)</string>
+    <string name="add_server">Tambah Server</string>
+    <string name="add_user">Tambah User</string>
+    <string name="delete">Hapus</string>
+    <string name="renew">Perpanjang</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="cleanup_expired">Cleanup Expired</string>
+</resources>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_vpn">
+
+    <fragment
+        android:id="@+id/nav_vpn"
+        android:name="com.zivpn.app.ui.vpn.VpnFragment"
+        android:label="VPN" />
+
+    <fragment
+        android:id="@+id/nav_servers"
+        android:name="com.zivpn.app.ui.server.ServerListFragment"
+        android:label="Servers">
+
+        <action
+            android:id="@+id/action_servers_to_add"
+            app:destination="@id/nav_add_server" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_add_server"
+        android:name="com.zivpn.app.ui.server.AddServerFragment"
+        android:label="Add Server" />
+
+    <fragment
+        android:id="@+id/nav_users"
+        android:name="com.zivpn.app.ui.user.UserListFragment"
+        android:label="Users" />
+
+</navigation>
